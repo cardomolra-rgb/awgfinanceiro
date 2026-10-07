@@ -12,6 +12,7 @@ import AccountsReceivable from './components/AccountsReceivable';
 import TransactionModal from './components/TransactionModal';
 import ImportModal from './components/ImportModal';
 import AuthModal from './components/AuthModal';
+import LoginPage from './components/LoginPage';
 import { useFinanceStore } from './store/useFinanceStore';
 import { Transaction, TransactionType, TransactionStatus } from './types';
 import { todayISO } from './lib/dates';
@@ -25,6 +26,7 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   const [newTransactionType, setNewTransactionType] = useState<TransactionType | undefined>();
@@ -45,18 +47,14 @@ const App: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      if (!session?.user) {
-        setIsAuthModalOpen(true);
-      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        setIsGuestMode(false);
         setIsAuthModalOpen(false);
         refreshSupabaseStatus();
-      } else {
-        setIsAuthModalOpen(true);
       }
     });
 
@@ -198,6 +196,18 @@ const App: React.FC = () => {
     onMarkPaid: handleMarkPaid,
     onEdit: handleEditTransaction,
   };
+
+  if (!user && !isGuestMode) {
+    return (
+      <LoginPage
+        settings={settings}
+        onSuccess={() => {
+          refreshSupabaseStatus();
+        }}
+        onBypass={() => setIsGuestMode(true)}
+      />
+    );
+  }
 
   return (
     <Layout
