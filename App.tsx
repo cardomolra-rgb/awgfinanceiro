@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
@@ -11,15 +11,21 @@ import AccountsPayable from './components/AccountsPayable';
 import AccountsReceivable from './components/AccountsReceivable';
 import TransactionModal from './components/TransactionModal';
 import ImportModal from './components/ImportModal';
+import AuthModal from './components/AuthModal';
 import { useFinanceStore } from './store/useFinanceStore';
 import { Transaction, TransactionType, TransactionStatus } from './types';
 import { todayISO } from './lib/dates';
 import { UNCLASSIFIED_CATEGORY_ID } from './constants';
+import { supabase } from './lib/supabase';
+import { signOutUser } from './lib/auth';
+import { User } from '@supabase/supabase-js';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   const [newTransactionType, setNewTransactionType] = useState<TransactionType | undefined>();
 
@@ -34,6 +40,31 @@ const App: React.FC = () => {
     updateSettings, toggleTheme, exportData, importData, importTransactionsBatch, markBackupDone,
     undoImport, deleteAllTransactions, importHistory,
   } = store;
+
+  // Gerenciamento de Sessão e Listener de Autenticação Supabase
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        refreshSupabaseStatus();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [refreshSupabaseStatus]);
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+      setUser(null);
+    } catch (e) {
+      console.error('Erro ao sair:', e);
+    }
+  };
 
   const handleOpenModal = (type?: TransactionType) => {
     setEditingTransaction(undefined);
@@ -176,6 +207,9 @@ const App: React.FC = () => {
       onBackup={handleExport}
       lastBackupAt={settings.lastBackupAt}
       needsBackup={needsBackup}
+      user={user}
+      onOpenAuth={() => setIsAuthModalOpen(true)}
+      onSignOut={handleSignOut}
     >
       {needsBackup && (
         <div className="mb-4 p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -256,7 +290,6 @@ const App: React.FC = () => {
         <ImportModal
           onClose={() => setIsImportModalOpen(false)}
           onImportBackup={(json: string) => {
-            // Antes de substituir tudo, baixa uma cópia dos dados atuais
             if (transactions.length > 0) handleExport();
             return importData(json);
           }}
@@ -266,6 +299,14 @@ const App: React.FC = () => {
           existingTransactions={transactions}
         />
       )}
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onSuccess={() => {
+          refreshSupabaseStatus();
+        }}
+      />
     </Layout>
   );
 };

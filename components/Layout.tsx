@@ -24,6 +24,8 @@ import { GlobalSearchModal } from './GlobalSearchModal';
 import { NotificationDropdown } from './NotificationDropdown';
 import { Transaction, Category, Account, Entity, TransactionType } from '../types';
 
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
 interface LayoutProps {
   children: React.ReactNode;
   activeTab: string;
@@ -39,6 +41,9 @@ interface LayoutProps {
   onBackup?: () => void;
   lastBackupAt?: string;
   needsBackup?: boolean;
+  user?: SupabaseUser | null;
+  onOpenAuth?: () => void;
+  onSignOut?: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
@@ -55,7 +60,10 @@ const Layout: React.FC<LayoutProps> = ({
   onEditTransaction,
   onBackup,
   lastBackupAt,
-  needsBackup
+  needsBackup,
+  user,
+  onOpenAuth,
+  onSignOut
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -295,6 +303,36 @@ const Layout: React.FC<LayoutProps> = ({
             >
               {settings.theme === 'dark' ? <Sun size={20} className="text-amber-500" /> : <Moon size={20} className="text-blue-600" />}
             </button>
+
+            {user ? (
+              <div className="flex items-center gap-2.5 pl-2 border-l border-slate-200 dark:border-slate-700">
+                <div className="w-8 h-8 rounded-full bg-moura-orange-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">
+                  {(user.user_metadata?.full_name || user.email || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-100 max-w-[130px] truncate">
+                    {user.user_metadata?.full_name || user.email?.split('@')[0]}
+                  </span>
+                  <span className="text-[10px] text-slate-400 truncate max-w-[130px]">{user.email}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-full transition-colors ml-1"
+                  title="Sair da Conta"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={onOpenAuth}
+                className="flex items-center gap-2 px-3.5 py-2 bg-moura-orange-500 hover:bg-moura-orange-600 text-white font-bold text-xs rounded-full shadow-md transition-all hover:scale-105"
+              >
+                Entrar / Cadastrar
+              </button>
+            )}
           </div>
         </header>
 
