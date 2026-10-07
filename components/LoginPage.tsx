@@ -22,15 +22,28 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onBypass, setti
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const translateError = (err: any): string => {
-    const msg = err.message || String(err);
-    if (msg.includes('Failed to fetch') || msg.includes('fetch')) {
-      return 'Não foi possível conectar ao servidor do Supabase. Verifique sua conexão de internet ou se há algum bloqueador ativado.';
+    const msg = (err.message || String(err)).toLowerCase();
+    const code = err.code || '';
+
+    if (msg.includes('already registered') || msg.includes('already been registered') || code === 'email_exists' || code === 'user_already_exists') {
+      return 'Este e-mail já está cadastrado no sistema. Clique em "Fazer Login" abaixo para entrar com sua senha.';
     }
-    if (msg.includes('Invalid login credentials')) return 'E-mail ou senha incorretos.';
-    if (msg.includes('User already registered')) return 'Este e-mail já está cadastrado. Faça login para acessar.';
-    if (msg.includes('Password should be at least')) return 'A senha deve ter no mínimo 6 caracteres.';
-    if (msg.includes('Unable to validate email address')) return 'Por favor, insira um e-mail válido.';
-    return msg;
+    if (msg.includes('invalid login credentials') || code === 'invalid_credentials') {
+      return 'E-mail ou senha incorretos. Verifique suas credenciais e tente novamente.';
+    }
+    if (msg.includes('email not confirmed') || code === 'email_not_confirmed') {
+      return 'E-mail não confirmado. Verifique a caixa de entrada do seu e-mail para confirmar a conta.';
+    }
+    if (msg.includes('password should be at least') || code === 'weak_password') {
+      return 'A senha deve ter no mínimo 6 caracteres.';
+    }
+    if (msg.includes('unable to validate email address') || code === 'email_address_invalid') {
+      return 'Por favor, insira um e-mail válido.';
+    }
+    if (msg.includes('failed to fetch') || msg.includes('networkerror')) {
+      return 'Não foi possível conectar ao servidor do Supabase. Verifique sua conexão de internet ou desative bloqueadores de anúncios/adblockers.';
+    }
+    return err.message || String(err);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
