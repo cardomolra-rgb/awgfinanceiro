@@ -45,12 +45,18 @@ const App: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      if (!session?.user) {
+        setIsAuthModalOpen(true);
+      }
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        setIsAuthModalOpen(false);
         refreshSupabaseStatus();
+      } else {
+        setIsAuthModalOpen(true);
       }
     });
 
@@ -61,6 +67,7 @@ const App: React.FC = () => {
     try {
       await signOutUser();
       setUser(null);
+      setIsAuthModalOpen(true);
     } catch (e) {
       console.error('Erro ao sair:', e);
     }

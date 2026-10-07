@@ -1,16 +1,19 @@
 # Última alteração feita pelo Antigravity
 
-**Data:** 07/10/2026 às 02:44 (horário de Brasília)
+**Data:** 07/10/2026 às 09:02 (horário de Brasília)
 
-**O que foi feito:** Migração e Sincronização Completa com o Supabase.
-- **Script SQL de Migração:** Gerado em `supabase/migrations/20261007000000_create_awg_tables.sql` com a criação de todas as 7 tabelas com prefixo `awg_` (`awg_categories`, `awg_accounts`, `awg_entities`, `awg_transactions`, `awg_recurrences`, `awg_settings`, `awg_import_history`) e políticas RLS de segurança ativadas.
-- **Camada de Sincronização (`lib/supabaseSync.ts`):** Mapeamento de dados entre o estado da aplicação e as tabelas PostgreSQL, suporte a recarga do banco e envio dos dados locais.
-- **Gerenciador de Estado (`store/useFinanceStore.ts`):** Adicionado auto-sync em segundo plano, verificação de disponibilidade do Supabase e sincronização bidirecional.
-- **Interface de Configurações (`components/Settings.tsx`):** Adicionado card "Integração Supabase (Banco na Nuvem)" exibindo status da conexão, botão "Subir dados para o Supabase agora" e instruções para execução da migração.
+**O que foi feito:** Implementação do Sistema de Autenticação e Login de Usuários (Supabase Auth).
+- **Módulo de Autenticação (`lib/auth.ts`):** Funções para Login (`signInWithEmail`), Cadastro (`signUpWithEmail`), Logout (`signOutUser`) e Recuperação de Senha (`resetPasswordEmail`).
+- **Modal de Autenticação (`components/AuthModal.tsx`):** Interface moderna e responsiva para Login, Cadastro de novos usuários e Recuperação de Senha.
+- **Barra de Navegação (`components/Layout.tsx`):** Exibição do perfil do usuário logado (nome, e-mail e avatar) com botão de "Sair", ou botão "Entrar / Cadastrar" se estiver deslogado.
+- **Integração no App (`App.tsx`):** Listener `onAuthStateChange` para gerenciar sessões ativas e recarregar os dados do usuário autenticado no Supabase.
+- **Script SQL de Isolamento (`supabase/migrations/20261007010000_add_user_id_and_auth_rls.sql`):** Adicionada a coluna `user_id` e atualização das políticas RLS para isolar dados por usuário no Supabase.
 
-Arquivos criados/alterados: `supabase/migrations/20261007000000_create_awg_tables.sql`, `lib/supabaseSync.ts`, `store/useFinanceStore.ts`, `components/Settings.tsx`, `App.tsx`
+Arquivos alterados/criados: `lib/auth.ts`, `components/AuthModal.tsx`, `components/Layout.tsx`, `App.tsx`, `supabase/migrations/20261007010000_add_user_id_and_auth_rls.sql`
 
 ---
+
+## Alteração anterior — 07/10/2026 às 02:44
 
 ## Alteração anterior — 07/10/2026 às 02:40
 
