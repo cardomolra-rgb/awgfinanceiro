@@ -1,0 +1,7 @@
+{
+  "name": "AwgFinanceiro - Gestão Financeira Empresarial",
+  "description": "Um sistema completo de controle de fluxo de caixa, contas a pagar/receber e relatórios financeiros com visual profissional e customizável.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
