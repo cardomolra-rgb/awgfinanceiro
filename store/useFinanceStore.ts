@@ -66,6 +66,10 @@ export function useFinanceStore() {
   const isInitialMount = useRef(true);
 
   // Checa conexão Supabase e sincroniza dados iniciais
+  // Estado mais recente, lido pelas funções de sincronização sem recriá-las a cada mudança
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const refreshSupabaseStatus = useCallback(async () => {
     setSupabaseStatus(prev => ({ ...prev, syncing: true }));
     const status = await checkSupabaseConnection();
@@ -76,13 +80,13 @@ export function useFinanceStore() {
         setSupabaseStatus({ ...status, syncing: false, message: 'Dados sincronizados com o Supabase com sucesso.' });
       } else {
         // Se as tabelas no Supabase estão vazias, envia o estado local atual para popular o banco remoto
-        const pushRes = await pushAllToSupabase(state);
+        const pushRes = await pushAllToSupabase(stateRef.current);
         setSupabaseStatus({ ...status, syncing: false, message: pushRes.message });
       }
     } else {
       setSupabaseStatus({ ...status, syncing: false });
     }
-  }, [state]);
+  }, []);
 
   useEffect(() => {
     refreshSupabaseStatus();

@@ -1,26 +1,22 @@
 # Última alteração feita pelo Claude
 
-**Data:** 07/10/2026
+**Data:** 07/10/2026 (11:58)
 
 ## O que foi feito
-Corrigido o motivo do login não funcionar na Vercel ("a Vercel não conversa com o Supabase").
+Corrigida a importação de extrato que "não importava" depois que o login passou a funcionar.
 
-- **Arquivo alterado:** `vercel.json` (só 1 linha).
-- **Causa:** a regra de segurança do navegador (Content-Security-Policy, `connect-src 'self'`) só deixava
-  o site falar com o próprio domínio. Toda chamada ao Supabase (login, cadastro, dados) era bloqueada
-  pelo navegador antes de sair. Por isso o Supabase não registrava nenhuma tentativa de login vinda do site.
-- **Correção:** `connect-src` agora permite também o seu projeto Supabase:
-  `https://mdcymhgqzvdrojasuxhb.supabase.co` e `wss://mdcymhgqzvdrojasuxhb.supabase.co` (tempo real).
-  O resto das proteções continua igual.
-- Testado em navegador: com a regra antiga a chamada é bloqueada; com a nova, é liberada.
+- **Arquivos alterados:** `App.tsx` e `store/useFinanceStore.ts` (poucas linhas).
+- **Causa:** a cada mudança nos dados, o sistema reiniciava a escuta do login e, com isso, recarregava
+  tudo do Supabase por cima da tela. O extrato era lido corretamente, mas em menos de 1 segundo os
+  lançamentos importados eram substituídos pelos dados do banco (que ainda não os tinha), antes de
+  serem salvos. Nos registros do Supabase aparecia o sistema relendo o banco dezenas de vezes por segundo.
+- **Correção:** os dados só são recarregados do banco quando alguém entra no sistema (login), e não a
+  cada alteração. Assim, o que é importado fica na tela e é salvo no Supabase normalmente.
+- Verificado: o projeto compila e os testes passam.
 
 ## Para entrar no ar
-1. Fazer commit e push para o GitHub (branch `main`). A Vercel publica sozinha.
-2. No painel do Supabase → Authentication → URL Configuration:
-   - **Site URL:** o endereço do site na Vercel (ex.: `https://SEU-SITE.vercel.app`)
-   - **Redirect URLs:** `https://SEU-SITE.vercel.app/**`
-   Sem isso, os links de confirmação de e-mail e de "esqueci a senha" apontam para o endereço errado.
+Enviar para o GitHub (no Antigravity: Sync/Push; ou `git push origin main`). A Vercel publica sozinha.
 
-## Atenção (não alterado, aguardando sua decisão)
-- As tabelas `awg_*` estão com a política "Permitir acesso total" para qualquer pessoa: quem tiver a
-  chave pública do site consegue ler e apagar os dados financeiros sem fazer login.
+## Pendente (aguardando sua decisão)
+- As tabelas `awg_*` continuam abertas para qualquer pessoa (política "Permitir acesso total").
+  A correção já está preparada; falta você aprovar.

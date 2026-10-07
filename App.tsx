@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
@@ -28,6 +28,7 @@ const App: React.FC = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const lastSyncedUserRef = useRef<string | null>(null);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | undefined>();
   const [newTransactionType, setNewTransactionType] = useState<TransactionType | undefined>();
 
@@ -54,7 +55,14 @@ const App: React.FC = () => {
       if (session?.user) {
         setIsGuestMode(false);
         setIsAuthModalOpen(false);
-        refreshSupabaseStatus();
+        // Recarrega do banco só quando um usuário diferente entra (não a cada renovação de sessão),
+        // senão os dados recém-importados na tela seriam substituídos antes de serem salvos.
+        if (lastSyncedUserRef.current !== session.user.id) {
+          lastSyncedUserRef.current = session.user.id;
+          refreshSupabaseStatus();
+        }
+      } else {
+        lastSyncedUserRef.current = null;
       }
     });
 
